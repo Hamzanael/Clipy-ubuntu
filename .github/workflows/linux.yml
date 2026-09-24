@@ -32,14 +32,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 gir1.2-keybinder-3.0 xvfb
 
-    - name: Run unit tests
-      working-directory: linux
-      run: /usr/bin/python3 -m unittest discover -s tests -t . -v
-
-    - name: Check that the GTK modules import
+    - name: Run tests (including GTK window smoke tests)
       working-directory: linux
       run: |
-        xvfb-run -a /usr/bin/python3 -c "import clipy_linux.app, clipy_linux.snippet_editor, clipy_linux.preferences"
+        xvfb-run -a /usr/bin/python3 -m unittest discover -s tests -t . -v
         /usr/bin/python3 -m clipy_linux --version
 
     - name: Check shell scripts

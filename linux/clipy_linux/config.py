@@ -33,6 +33,8 @@ DEFAULTS = {
     "show_icons": True,
     "show_clear_history_item": True,
     "confirm_clear_history": True,
+    # "panel" (searchable clipboard window) or "menu" (classic Clipy menu)
+    "popup_style": "panel",
     # "light" (white icon for dark panels), "dark" or "hidden"
     "tray_icon": "light",
     # Shortcuts (Gtk accelerator syntax). Only registered directly on X11;

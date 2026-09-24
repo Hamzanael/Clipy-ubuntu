@@ -209,6 +209,10 @@ class PasteTests(unittest.TestCase):
         argv = paste.paste_command("ctrl+v", session="wayland", which=lambda name: name == "ydotool")
         self.assertEqual(argv, ["ydotool", "key", "29:1", "47:1", "47:0", "29:0"])
 
+    def test_x11_refocuses_target_window(self):
+        argv = paste.paste_command("ctrl+v", session="x11", which=lambda name: True, window=42)
+        self.assertEqual(argv, ["xdotool", "windowfocus", "--sync", "42", "key", "--clearmodifiers", "ctrl+v"])
+
     def test_no_tool(self):
         self.assertIsNone(paste.paste_command("ctrl+v", session="x11", which=lambda name: False))
 

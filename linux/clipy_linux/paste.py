@@ -26,14 +26,19 @@ def parse_keys(keys):
     return parts[:-1], parts[-1] if parts else "v"
 
 
-def paste_command(keys="ctrl+v", session=None, which=shutil.which):
-    """Return the argv that sends `keys` (e.g. "ctrl+shift+v"), or None."""
+def paste_command(keys="ctrl+v", session=None, which=shutil.which, window=None):
+    """Return the argv that sends `keys` (e.g. "ctrl+shift+v"), or None.
+
+    On X11, `window` is focused first so the paste reaches the app that was
+    active before Clipy's panel took focus.
+    """
     session = session or session_type()
     modifiers, key = parse_keys(keys)
 
     if session != "wayland" and which("xdotool"):
         xkey = {"insert": "Insert", "v": "v"}.get(key, key)
-        return ["xdotool", "key", "--clearmodifiers", "+".join(modifiers + [xkey])]
+        focus = ["windowfocus", "--sync", str(window)] if window else []
+        return ["xdotool"] + focus + ["key", "--clearmodifiers", "+".join(modifiers + [xkey])]
 
     if session == "wayland":
         if which("wtype"):
@@ -53,8 +58,23 @@ def paste_command(keys="ctrl+v", session=None, which=shutil.which):
     return None
 
 
-def send_paste(keys="ctrl+v"):
-    argv = paste_command(keys)
+def focused_window(which=shutil.which):
+    """The X11 window that has keyboard focus, or None (always None on Wayland)."""
+    if session_type() == "wayland" or not which("xdotool"):
+        return None
+    for command in ("getactivewindow", "getwindowfocus"):
+        try:
+            result = subprocess.run(["xdotool", command], capture_output=True, text=True, timeout=1)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        window = result.stdout.strip()
+        if result.returncode == 0 and window.isdigit() and window != "0":
+            return int(window)
+    return None
+
+
+def send_paste(keys="ctrl+v", window=None):
+    argv = paste_command(keys, window=window)
     if not argv:
         return False
     try:

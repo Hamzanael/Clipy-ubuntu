@@ -33,7 +33,8 @@ try:
 except (ValueError, ImportError):
     Keybinder = None
 
-ICON_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "icons")
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+ICON_DIR = os.path.join(DATA_DIR, "icons")
 
 # Password managers mark secrets with these clipboard targets.
 CONCEALED_TARGETS = {"x-kde-passwordManagerHint", "application/x-nspasteboard-concealed-type"}
@@ -55,6 +56,9 @@ class ClipyApplication(Gtk.Application):
         self.preferences = None
         self._menu_dirty = False
         self._popup_menu = None
+        self.panel = None
+        # Window to hand focus back to before pasting from the panel (X11 only).
+        self.paste_target = None
         self._last_popup = 0.0
 
         self.add_main_option("menu", ord("m"), GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
@@ -86,6 +90,7 @@ class ClipyApplication(Gtk.Application):
         self.settings["launch_at_login"] = autostart.is_enabled()
         self.settings.connect(self.on_setting_changed)
         self.hold()  # keep running without windows
+        self.load_css()
 
         self.setup_tray()
         self.setup_clipboard()
@@ -164,6 +169,12 @@ class ClipyApplication(Gtk.Application):
     def rebuild_tray_menu(self):
         self._menu_dirty = False
         self.tray_menu = self.build_gtk_menu(mm.MAIN)
+        # Quick way into the searchable panel from the tray.
+        open_panel = self._menu_item("Open Clipboard…", icon_name="edit-paste-symbolic")
+        open_panel.connect("activate", lambda *_: self.show_panel(mm.HISTORY))
+        self.tray_menu.insert(Gtk.SeparatorMenuItem(), 0)
+        self.tray_menu.insert(open_panel, 0)
+        self.tray_menu.show_all()
         if self.indicator is not None:
             self.indicator.set_menu(self.tray_menu)
         return False
@@ -236,22 +247,26 @@ class ClipyApplication(Gtk.Application):
         width, height = max(1, int(pixbuf.get_width() * scale)), max(1, int(pixbuf.get_height() * scale))
         return Gtk.Image.new_from_pixbuf(pixbuf.scale_simple(width, height, GdkPixbuf.InterpType.BILINEAR))
 
-    def popup(self, menu_type):
+    def popup(self, menu_type, event_time=0):
         # A shortcut bound both here and as a desktop shortcut would fire twice.
         now = time.monotonic()
         if now - self._last_popup < 0.3:
             return
         self._last_popup = now
+        if self.settings["popup_style"] == "panel":
+            self.show_panel(menu_type, event_time)
+            return
         self._popup_menu = self.build_gtk_menu(menu_type)
         self._show_popup(self._popup_menu)
 
-    def popup_snippet_folder(self, folder_id):
-        for folder, snippets in self.db.folder_details():
-            if folder.id == folder_id:
-                submenu = self.builder.folder_submenu(folder, snippets, with_label=True)
-                self._popup_menu = self.build_gtk_menu(None, submenu.children)
-                self._show_popup(self._popup_menu)
-                return
+    def show_panel(self, menu_type=mm.HISTORY, event_time=0):
+        from .panel import ClipboardPanel
+        if self.panel is None:
+            self.panel = ClipboardPanel(self)
+            self.add_window(self.panel)
+        if not self.panel.get_visible():
+            self.paste_target = paste.focused_window()
+        self.panel.show_at_pointer("snippet" if menu_type == mm.SNIPPET else "history", event_time)
 
     def _show_popup(self, menu):
         event_time = Gtk.get_current_event_time() or Gdk.CURRENT_TIME
@@ -265,12 +280,12 @@ class ClipyApplication(Gtk.Application):
     # ----------------------------------------------------------------- actions
 
     def on_item_activated(self, _item, action, payload):
+        # Menus don't take focus, so the paste goes to the focused app as is.
+        self.paste_target = None
         if action == mm.PASTE_CLIP:
             self.paste_clip(payload)
         elif action == mm.PASTE_SNIPPET:
-            snippet = self.db.snippet(payload)
-            if snippet:
-                self.paste_text(snippet.content)
+            self.paste_snippet(payload)
         elif action == mm.CLEAR_HISTORY:
             self.clear_history()
         elif action == mm.EDIT_SNIPPETS:
@@ -294,6 +309,11 @@ class ClipyApplication(Gtk.Application):
         else:
             self.paste_text(clip.text)
 
+    def paste_snippet(self, snippet_id):
+        snippet = self.db.snippet(snippet_id)
+        if snippet:
+            self.paste_text(snippet.content)
+
     def paste_text(self, text):
         self.clipboard.set_text(text, -1)
         self.clipboard.store()
@@ -303,7 +323,8 @@ class ClipyApplication(Gtk.Application):
         if not self.settings["paste_automatically"]:
             return
         # Give the menu time to close and focus to return to the target window.
-        GLib.timeout_add(PASTE_DELAY_MS, lambda: paste.send_paste(self.settings["paste_keys"]) and False)
+        target, self.paste_target = self.paste_target, None
+        GLib.timeout_add(PASTE_DELAY_MS, lambda: paste.send_paste(self.settings["paste_keys"], target) and False)
 
     def clear_history(self):
         if self.settings["confirm_clear_history"]:
@@ -352,6 +373,16 @@ class ClipyApplication(Gtk.Application):
         elif key == "max_history":
             self.db.trim_history(self.settings["max_history"], not self.settings["reorder_after_paste"])
         self.invalidate_menus()
+
+    def load_css(self):
+        provider = Gtk.CssProvider()
+        try:
+            provider.load_from_path(os.path.join(DATA_DIR, "style.css"))
+        except GLib.Error as error:
+            print(f"clipy: could not load style.css: {error.message}", file=sys.stderr)
+            return
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     # ---------------------------------------------------------------- clipboard
 
@@ -407,10 +438,16 @@ class ClipyApplication(Gtk.Application):
         self.bound_shortcuts = []
         for menu_type in mm.MENU_TYPES:
             accel = self.settings[f"{menu_type}_shortcut"]
-            if accel and Keybinder.bind(accel, lambda _keystring, t: self.popup(t), menu_type):
+            if accel and Keybinder.bind(accel, lambda _keystring, t: self.popup(t, _keybinder_time()), menu_type):
                 self.bound_shortcuts.append(accel)
             elif accel:
                 print(f"clipy: could not bind shortcut {accel}", file=sys.stderr)
+
+
+def _keybinder_time():
+    # keybinder_get_current_event_time() only exists in keybinder-3.0 >= 0.3.0.
+    getter = getattr(Keybinder, "get_current_event_time", None)
+    return getter() if getter else 0
 
 
 def main(argv=None):

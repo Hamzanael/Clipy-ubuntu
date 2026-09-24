@@ -1,0 +1,204 @@
+/* Clipy for Linux: shared styles. Colours come from the active GTK theme so
+ * light and dark themes (Yaru, Adwaita, …) are both followed. */
+
+/* ---------------------------------------------------------------- panel */
+
+window.clipy-panel {
+    background: transparent;
+}
+
+.clipy-panel-frame {
+    background-color: @theme_base_color;
+    border: 1px solid alpha(@theme_fg_color, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 4px 14px alpha(black, 0.22);
+    margin: 22px;
+    padding: 10px;
+}
+
+/* Without a compositor there is no transparency: draw a plain square panel. */
+window.clipy-panel.clipy-solid {
+    background-color: @theme_base_color;
+}
+
+window.clipy-solid .clipy-panel-frame {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.clipy-search {
+    border-radius: 10px;
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 1.05em;
+}
+
+.clipy-tabs button {
+    padding: 2px 18px;
+}
+
+.clipy-list,
+.clipy-list row {
+    background: transparent;
+}
+
+.clipy-list row {
+    border-radius: 10px;
+    padding: 7px 10px;
+    margin: 1px 0;
+    outline: none;
+}
+
+.clipy-list row:hover {
+    background-color: alpha(@theme_fg_color, 0.06);
+}
+
+.clipy-list row:selected {
+    background-color: alpha(@theme_selected_bg_color, 0.18);
+    color: @theme_fg_color;
+}
+
+.clipy-badge {
+    background-color: alpha(@theme_fg_color, 0.08);
+    border-radius: 6px;
+    min-width: 22px;
+    min-height: 22px;
+    font-size: 0.85em;
+    font-weight: bold;
+    font-feature-settings: "tnum";
+}
+
+.clipy-list row:selected .clipy-badge {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+/* The per-row remove button only shows on the hovered or selected row. */
+.clipy-row-action {
+    opacity: 0;
+    color: @theme_fg_color;
+}
+
+.clipy-list row:hover .clipy-row-action,
+.clipy-list row:selected .clipy-row-action {
+    opacity: 0.7;
+}
+
+.clipy-row-title {
+    font-weight: 500;
+}
+
+.clipy-row-subtitle,
+.clipy-dim {
+    opacity: 0.6;
+    font-size: 0.88em;
+}
+
+.clipy-thumbnail {
+    border-radius: 6px;
+    border: 1px solid alpha(@theme_fg_color, 0.1);
+}
+
+.clipy-empty {
+    opacity: 0.55;
+    padding: 36px 12px;
+}
+
+.clipy-empty-icon {
+    opacity: 0.4;
+}
+
+.clipy-footer {
+    font-size: 0.82em;
+    opacity: 0.55;
+    padding: 6px 4px 0 4px;
+}
+
+.clipy-footer button {
+    min-height: 24px;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+/* ------------------------------------------- preferences / snippet editor */
+
+.clipy-page {
+    padding: 18px 24px 24px 24px;
+}
+
+.clipy-group-title {
+    font-weight: bold;
+    font-size: 0.95em;
+    margin: 14px 4px 6px 4px;
+}
+
+.clipy-group-description {
+    margin: -2px 4px 8px 4px;
+}
+
+.clipy-boxed-list {
+    background-color: @theme_base_color;
+    border: 1px solid alpha(@theme_fg_color, 0.12);
+    border-radius: 12px;
+}
+
+.clipy-boxed-list row {
+    padding: 10px 14px;
+    min-height: 34px;
+    border-bottom: 1px solid alpha(@theme_fg_color, 0.08);
+}
+
+.clipy-boxed-list row:last-child {
+    border-bottom: none;
+}
+
+.clipy-boxed-list row:first-child {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.clipy-boxed-list row:last-child {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.clipy-sidebar {
+    background-color: alpha(@theme_fg_color, 0.03);
+    border-right: 1px solid alpha(@theme_fg_color, 0.1);
+}
+
+.clipy-sidebar row {
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin: 1px 8px;
+}
+
+.clipy-sidebar row.clipy-folder-row {
+    margin-top: 10px;
+}
+
+.clipy-sidebar row.clipy-disabled {
+    opacity: 0.5;
+}
+
+.clipy-editor-title {
+    font-size: 1.35em;
+    font-weight: bold;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 4px 0;
+}
+
+.clipy-editor-content {
+    border-radius: 12px;
+    border: 1px solid alpha(@theme_fg_color, 0.12);
+}
+
+.clipy-shortcut-label {
+    font-family: monospace;
+    background-color: alpha(@theme_fg_color, 0.08);
+    border-radius: 6px;
+    padding: 2px 8px;
+}

@@ -6,11 +6,20 @@ to the macOS app and uses the same menu layout, settings and snippet XML format.
 Tested on Ubuntu 22.04 and 24.04 (GNOME). It should also work on other
 distributions and desktops that have GTK 3 and a system tray.
 
+<p align="center">
+  <img src="docs/panel-light.png" width="380" alt="Clipboard panel, light theme">
+  <img src="docs/panel-dark.png" width="380" alt="Clipboard panel, dark theme">
+</p>
+
 ## Features
 
-- Clipboard history for text and images, with a thumbnail preview in the menu
-- The same menu as on macOS: the newest items inline, the rest in numbered
-  folders (`1 - 10`, `11 - 20`, …). Press an item's number key to choose it
+- A **clipboard panel** that opens at the mouse pointer. Type to search your
+  history and snippets, then press Enter to paste. It shows image thumbnails
+  and when each item was copied, and follows the system's light or dark theme
+- Clipboard history for text and images
+- The **classic Clipy menu** is still available (Preferences → Popup style). It works
+  as on macOS: the newest items inline, the rest in numbered folders
+  (`1 - 10`, `11 - 20`, …). Press an item's number key to choose it
 - Snippets organized in folders, with an editor. Snippets are imported and
   exported in the macOS Clipy XML format, so you can move them between Mac and Linux
 - Automatic paste into the focused app after you choose an item
@@ -43,6 +52,10 @@ To uninstall, run `./install.sh --uninstall`. This keeps your history and snippe
 
 You can also run Clipy from the checkout without installing it: `linux/bin/clipy-ubuntu`.
 
+<p align="center">
+  <img src="docs/snippet-editor.png" width="600" alt="Snippet editor">
+</p>
+
 ## Shortcuts
 
 | Menu     | Default shortcut |
@@ -50,6 +63,17 @@ You can also run Clipy from the checkout without installing it: `linux/bin/clipy
 | Main     | Ctrl+Alt+V       |
 | History  | Ctrl+Alt+H       |
 | Snippets | Ctrl+Alt+B       |
+
+Keys in the clipboard panel:
+
+| Key                | Action                                  |
+|--------------------|-----------------------------------------|
+| Type               | Search history and snippets             |
+| ↑ / ↓, Enter       | Select and paste                        |
+| Alt+1 … Alt+9      | Paste item 1–9                          |
+| Tab                | Switch between Clipboard and Snippets   |
+| Shift+Delete       | Remove the selected history item        |
+| Esc                | Clear the search, or close the panel    |
 
 **Ubuntu on Xorg (X11):** Clipy registers these shortcuts itself. Change them under
 Preferences → Shortcuts.
@@ -102,5 +126,7 @@ python3 -m unittest discover -s tests -t .
 ```
 
 The modules that don't use GTK (`storage`, `menu_model`, `snippets_xml`,
-`paste`, `config`) are unit tested without a display. `app.py`,
-`snippet_editor.py` and `preferences.py` hold the GTK code.
+`panel_model`, `paste`, `config`) are unit tested without a display. `app.py`,
+`panel.py`, `snippet_editor.py` and `preferences.py` hold the GTK code, and
+`data/style.css` holds the styling. It uses the GTK theme's colours, so it
+works with Yaru, Adwaita and dark themes.
