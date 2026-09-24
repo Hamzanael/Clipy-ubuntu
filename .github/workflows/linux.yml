@@ -1,0 +1,43 @@
+name: Linux
+
+on:
+  push:
+    paths:
+      - "linux/**"
+      - ".github/workflows/linux.yml"
+  pull_request:
+    paths:
+      - "linux/**"
+      - ".github/workflows/linux.yml"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-test:
+    name: linux-test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Install GTK dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 gir1.2-keybinder-3.0 xvfb
+
+    - name: Run tests (including GTK window smoke tests)
+      working-directory: linux
+      run: |
+        xvfb-run -a /usr/bin/python3 -m unittest discover -s tests -t . -v
+        /usr/bin/python3 -m clipy_linux --version
+
+    - name: Check shell scripts
+      working-directory: linux
+      run: shellcheck install.sh bin/clipy-ubuntu bin/clipy-ubuntu-shortcuts
