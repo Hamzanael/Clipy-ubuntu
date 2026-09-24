@@ -50,6 +50,10 @@ KStatusNotifierItem Support" extension.
 
 To uninstall, run `./install.sh --uninstall`. This keeps your history and snippets.
 
+Run `./install.sh --check` to see what is installed, what is missing and whether
+Clipy is running. It exits with 0 when everything is ready. AI coding agents
+can follow [`AGENTS.md`](../AGENTS.md) to install Clipy for you.
+
 You can also run Clipy from the checkout without installing it: `linux/bin/clipy-ubuntu`.
 
 <p align="center">
