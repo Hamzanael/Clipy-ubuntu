@@ -53,7 +53,11 @@ To uninstall, run `./install.sh --uninstall`. This keeps your history and snippe
 You can also run Clipy from the checkout without installing it: `linux/bin/clipy-ubuntu`.
 
 <p align="center">
-  <img src="docs/snippet-editor.png" width="600" alt="Snippet editor">
+  <img src="docs/snippet-editor.png" width="560" alt="Snippet editor">
+</p>
+<p align="center">
+  <img src="docs/panel-search.png" width="300" alt="Searching the clipboard">
+  <img src="docs/preferences-light.png" width="300" alt="Preferences">
 </p>
 
 ## Shortcuts
