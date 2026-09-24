@@ -4,6 +4,7 @@
 #   ./install.sh              install into ~/.local
 #   ./install.sh --deps       also install the required Ubuntu packages (uses sudo)
 #   ./install.sh --uninstall  remove it again
+#   ./install.sh --check      report what is installed and missing (exit 0 when ready)
 set -eu
 
 SRC=$(dirname "$(readlink -f "$0")")
@@ -13,6 +14,51 @@ BIN_DIR=$PREFIX/bin
 DESKTOP_DIR=$PREFIX/share/applications
 ICON_DIR=$PREFIX/share/icons/hicolor/256x256/apps
 PACKAGES="python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 gir1.2-keybinder-3.0 xdotool"
+
+if [ "${1:-}" = "--check" ]; then
+    status=0
+    report() { printf '%-22s %s\n' "$1" "$2"; }
+    missing=""
+    for pkg in $PACKAGES; do
+        dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed" || missing="$missing $pkg"
+    done
+    if [ -n "$missing" ]; then
+        report "packages:" "MISSING$missing"
+        status=1
+    else
+        report "packages:" "ok"
+    fi
+    if /usr/bin/python3 -c "import gi; gi.require_version('Gtk', '3.0'); from gi.repository import Gtk" 2>/dev/null; then
+        report "python3 + GTK 3:" "ok"
+    else
+        report "python3 + GTK 3:" "MISSING (install python3-gi gir1.2-gtk-3.0)"
+        status=1
+    fi
+    if [ -x "$BIN_DIR/clipy-ubuntu" ]; then
+        report "installed:" "ok ($("$BIN_DIR/clipy-ubuntu" --version 2>/dev/null || echo "version unknown"))"
+    else
+        report "installed:" "no (run ./install.sh)"
+        status=1
+    fi
+    case ":$PATH:" in
+        *":$BIN_DIR:"*) report "on PATH:" "ok" ;;
+        *) report "on PATH:" "no ($BIN_DIR is not on PATH; use the full path or log in again)" ;;
+    esac
+    if pgrep -f '^[^ ]*python3[.0-9]* -m clipy_linux' >/dev/null 2>&1; then
+        report "running:" "yes"
+    else
+        report "running:" "no"
+    fi
+    report "session:" "${XDG_SESSION_TYPE:-unknown}"
+    if [ "${XDG_SESSION_TYPE:-}" = "wayland" ]; then
+        if gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings 2>/dev/null | grep -q clipy-; then
+            report "wayland shortcuts:" "ok"
+        else
+            report "wayland shortcuts:" "not set (run clipy-ubuntu-shortcuts)"
+        fi
+    fi
+    exit $status
+fi
 
 if [ "${1:-}" = "--uninstall" ]; then
     "$BIN_DIR/clipy-ubuntu" --quit 2>/dev/null || true

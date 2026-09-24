@@ -78,6 +78,12 @@ clipboard.
 
 To uninstall, run `./install.sh --uninstall`. This keeps your history and snippets.
 
+> [!TIP]
+> **Installing with an AI coding agent?** Ask it to *"install Clipy on this machine
+> following AGENTS.md"*. [`AGENTS.md`](./AGENTS.md) walks agents such as Claude Code,
+> Codex and Cursor through checking, installing, starting and verifying Clipy,
+> and asks before anything that needs `sudo`.
+
 ### Screenshots
 
 <table>
@@ -176,7 +182,9 @@ linux/            Ubuntu / Linux app (Python, GTK 3)
 
 ## Contributing
 
-Issues and pull requests are welcome, for both the Linux and the macOS app. The
+Issues and pull requests are welcome, for both the Linux and the macOS app. If
+you work with an AI coding agent, [`AGENTS.md`](./AGENTS.md) gives it the repository
+layout, the test commands and the conventions. The
 Linux version especially needs:
 
 - Testing on other desktops and distributions (KDE, Fedora, Mint, …)
