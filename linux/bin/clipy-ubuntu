@@ -1,0 +1,5 @@
+#!/bin/sh
+# Launcher for Clipy on Linux. Uses the system Python, which provides PyGObject on Ubuntu.
+HERE=$(dirname "$(readlink -f "$0")")
+export PYTHONPATH="$HERE/..${PYTHONPATH:+:$PYTHONPATH}"
+exec /usr/bin/python3 -m clipy_linux "$@"

@@ -1,0 +1,45 @@
+#!/bin/sh
+# Register Clipy's shortcuts as GNOME custom keyboard shortcuts.
+# This is how global shortcuts work on Wayland, and it also works on X11.
+#
+#   clipy-ubuntu-shortcuts            add or update the shortcuts
+#   clipy-ubuntu-shortcuts --remove   remove them
+set -eu
+
+SCHEMA=org.gnome.settings-daemon.plugins.media-keys
+KEY_SCHEMA=$SCHEMA.custom-keybinding
+BASE=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+LAUNCHER=$(command -v clipy-ubuntu || echo "$(dirname "$(readlink -f "$0")")/clipy-ubuntu")
+
+if ! command -v gsettings >/dev/null 2>&1; then
+    echo "gsettings not found: add the shortcuts in your desktop's keyboard settings instead." >&2
+    exit 1
+fi
+
+current=$(gsettings get $SCHEMA custom-keybindings)
+# Drop our own entries and gsettings' "@as" empty-array prefix.
+paths=$(echo "$current" | sed -e 's/^@as //' -e 's/[][]//g' | tr ',' '\n' | sed -e "s/[ ']//g" | grep -v '/clipy-' | grep -v '^$' || true)
+
+if [ "${1:-}" != "--remove" ]; then
+    for spec in "main|Clipy: main menu|<Primary><Alt>v" \
+                "history|Clipy: history menu|<Primary><Alt>h" \
+                "snippet|Clipy: snippet menu|<Primary><Alt>b"; do
+        type=${spec%%|*}; rest=${spec#*|}; name=${rest%%|*}; binding=${rest#*|}
+        path="$BASE/clipy-$type/"
+        gsettings set "$KEY_SCHEMA:$path" name "$name"
+        gsettings set "$KEY_SCHEMA:$path" command "$LAUNCHER --menu $type"
+        gsettings set "$KEY_SCHEMA:$path" binding "$binding"
+        paths="$paths
+$path"
+    done
+fi
+
+list=$(echo "$paths" | grep -v '^$' | sed -e "s/.*/'&'/" | paste -sd, -)
+gsettings set $SCHEMA custom-keybindings "[$list]"
+
+if [ "${1:-}" = "--remove" ]; then
+    echo "Removed Clipy shortcuts."
+else
+    echo "Added shortcuts: Ctrl+Alt+V (main), Ctrl+Alt+H (history), Ctrl+Alt+B (snippets)."
+    echo "Change them in Settings > Keyboard > View and Customize Shortcuts > Custom Shortcuts."
+fi

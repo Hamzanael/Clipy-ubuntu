@@ -15,6 +15,9 @@ Clipy is a Clipboard extension app for macOS.
 
 __Requirement__: macOS 13 Ventura or later
 
+> **Ubuntu / Linux:** a GTK port with the same menus, snippets and snippet XML format lives in [`linux/`](./linux).
+> Install it with `cd linux && ./install.sh --deps`. See [linux/README.md](./linux/README.md) for details.
+
 __Distribution Site__ : <https://clipy-app.com>
 
 <img src="http://clipy-app.com/img/screenshot1.png" width="400">

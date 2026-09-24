@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=Clipy
+GenericName=Clipboard Manager
+Comment=Clipboard history and snippets
+Exec=clipy-ubuntu
+Icon=clipy-ubuntu
+Terminal=false
+Categories=Utility;GTK;
+Keywords=clipboard;history;snippet;paste;
+StartupNotify=false
+Actions=Snippets;Preferences;
+
+[Desktop Action Snippets]
+Name=Edit Snippets
+Exec=clipy-ubuntu --snippets
+
+[Desktop Action Preferences]
+Name=Preferences
+Exec=clipy-ubuntu --preferences
