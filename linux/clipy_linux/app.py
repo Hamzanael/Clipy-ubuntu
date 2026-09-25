@@ -14,7 +14,7 @@ from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk  # noqa: E402
 
 from . import APP_ID, APP_NAME, __version__, autostart, paste  # noqa: E402
 from . import menu_model as mm  # noqa: E402
-from .config import Settings, data_dir  # noqa: E402
+from .config import Settings, data_dir, keybinder_can_bind  # noqa: E402
 from .storage import KIND_IMAGE, KIND_TEXT, Database  # noqa: E402
 
 AppIndicator = None
@@ -438,7 +438,11 @@ class ClipyApplication(Gtk.Application):
         self.bound_shortcuts = []
         for menu_type in mm.MENU_TYPES:
             accel = self.settings[f"{menu_type}_shortcut"]
-            if accel and Keybinder.bind(accel, lambda _keystring, t: self.popup(t, _keybinder_time()), menu_type):
+            if accel and not keybinder_can_bind(accel):
+                # Grabbing it anyway would also block a desktop shortcut on the same keys.
+                print(f"clipy: {accel} can't be registered by Clipy (Shift with a character key); "
+                      "add it as a desktop shortcut with clipy-ubuntu-shortcuts", file=sys.stderr)
+            elif accel and Keybinder.bind(accel, lambda _keystring, t: self.popup(t, _keybinder_time()), menu_type):
                 self.bound_shortcuts.append(accel)
             elif accel:
                 print(f"clipy: could not bind shortcut {accel}", file=sys.stderr)
