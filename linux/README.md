@@ -84,7 +84,10 @@ Keys in the clipboard panel:
 | Esc                | Clear the search, or close the panel    |
 
 **Ubuntu on Xorg (X11):** Clipy registers these shortcuts itself. Change them under
-Preferences → Shortcuts.
+Preferences → Shortcuts. The exception is Shift with a letter, digit or symbol,
+such as Ctrl+Shift+V: the key-grabbing library Clipy uses can't detect those. Set
+one in Preferences, then run `clipy-ubuntu-shortcuts` to add it as a GNOME
+shortcut instead.
 
 **Ubuntu on Wayland (the default since 22.04):** Wayland does not let apps
 register global shortcuts. Run this once to add them as GNOME custom shortcuts:
@@ -93,8 +96,8 @@ register global shortcuts. Run this once to add them as GNOME custom shortcuts:
 clipy-ubuntu-shortcuts            # add; `--remove` removes them
 ```
 
-They then appear in Settings → Keyboard → Custom Shortcuts, where you can change
-them. Each shortcut runs a command, and you can bind these in any desktop:
+It uses the shortcuts from Preferences → Shortcuts. They then appear in Settings →
+Keyboard → Custom Shortcuts, where you can change them. Each shortcut runs a command, and you can bind these in any desktop:
 
 ```sh
 clipy-ubuntu --menu main      # or: history, snippet

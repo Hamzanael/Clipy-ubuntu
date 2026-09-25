@@ -48,6 +48,17 @@ DEFAULTS = {
 }
 
 
+def keybinder_can_bind(accel):
+    """False for shortcuts that Keybinder grabs but never reports.
+
+    Keybinder 0.3 lets Shift change the key (v becomes V) and then drops Shift
+    from the modifiers, so Shift plus a character key such as <Primary><Shift>v
+    never matches its own binding. Shift with a named key (Insert, F1) works.
+    """
+    key = accel.rsplit(">", 1)[-1]
+    return not ("<shift>" in accel.lower() and len(key) == 1)
+
+
 def _xdg_dir(env_name, fallback):
     value = os.environ.get(env_name)
     base = Path(value) if value else Path.home() / fallback

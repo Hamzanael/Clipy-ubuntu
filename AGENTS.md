@@ -108,8 +108,8 @@ registers them itself, so skip this step.
 [ "$XDG_SESSION_TYPE" = wayland ] && ~/.local/bin/clipy-ubuntu-shortcuts
 ```
 
-This binds Ctrl+Alt+V (clipboard), Ctrl+Alt+H (history) and Ctrl+Alt+B
-(snippets). It keeps the user's existing custom shortcuts, and running it again
+This binds the shortcuts set in Clipy's Preferences, by default Ctrl+Alt+V
+(clipboard), Ctrl+Alt+H (history) and Ctrl+Alt+B (snippets). It keeps the user's existing custom shortcuts, and running it again
 is safe. `clipy-ubuntu-shortcuts --remove` undoes it.
 
 ### Step 6: Verify
@@ -160,6 +160,7 @@ these while Clipy is running. Quit it first.
 |---------|---------------|
 | `PyGObject/GTK 3 is missing` | Install the packages from step 2. Clipy runs with the **system** Python (`/usr/bin/python3`). A pip, conda or pyenv Python won't do. |
 | No tray icon on GNOME | The "Ubuntu AppIndicators" extension is disabled. Run `gnome-extensions enable ubuntu-appindicators@ubuntu.com`. On non-Ubuntu GNOME, install "AppIndicator and KStatusNotifierItem Support". Clipy still works without the icon through the shortcuts. |
+| A Shift shortcut such as Ctrl+Shift+V does nothing on X11 | Clipy's key-grabbing library (Keybinder) can't detect Shift with a character key, so Clipy skips it and logs `can't be registered by Clipy`. Keep it in Preferences and run `~/.local/bin/clipy-ubuntu-shortcuts` (ask the user first) to add it as a GNOME shortcut. |
 | Shortcuts do nothing on Wayland | Run step 5, then check that `gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings` lists `clipy-main`. |
 | Item is copied but not pasted | Auto-paste needs `xdotool` (X11). On Wayland it needs `ydotool` with `ydotoold` running, or `wtype` on wlroots compositors. Without them, the user presses Ctrl+V. In terminals, set Preferences → Paste keystroke to `ctrl+shift+v`. |
 | History stays empty on Wayland | Clipy reads the clipboard through XWayland. Make sure `CLIPY_ALLOW_WAYLAND` is **not** set in the environment. |

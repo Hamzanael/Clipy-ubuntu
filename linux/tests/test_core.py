@@ -5,7 +5,7 @@ from pathlib import Path
 
 from clipy_linux import autostart, paste
 from clipy_linux import menu_model as mm
-from clipy_linux.config import DEFAULTS, Settings
+from clipy_linux.config import DEFAULTS, Settings, keybinder_can_bind
 from clipy_linux.snippets_xml import export_snippets, import_snippets
 from clipy_linux.storage import KIND_IMAGE, KIND_TEXT, Database
 
@@ -38,6 +38,12 @@ class SettingsTests(TempSettingsMixin, unittest.TestCase):
         self.assertEqual(loaded["inline_items"], 3)
         with self.assertRaises(KeyError):
             loaded["bogus"] = 1
+
+    def test_keybinder_can_bind(self):
+        for accel in ("<Primary><Alt>v", "<Primary><Shift>Insert", "<Shift>F1", "F9"):
+            self.assertTrue(keybinder_can_bind(accel), accel)
+        for accel in ("<Primary><Shift>v", "<Control><SHIFT>V", "<Shift><Alt>1"):
+            self.assertFalse(keybinder_can_bind(accel), accel)
 
 
 class HistoryTests(TempSettingsMixin, unittest.TestCase):

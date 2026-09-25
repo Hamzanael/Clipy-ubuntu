@@ -1,6 +1,10 @@
 #!/bin/sh
 # Register Clipy's shortcuts as GNOME custom keyboard shortcuts.
-# This is how global shortcuts work on Wayland, and it also works on X11.
+# This is how global shortcuts work on Wayland. On X11 it is also needed for
+# shortcuts Clipy can't register itself, such as Ctrl+Shift+V.
+#
+# The keys come from Clipy's settings (Preferences > Shortcuts); an empty
+# setting uses the default.
 #
 #   clipy-ubuntu-shortcuts            add or update the shortcuts
 #   clipy-ubuntu-shortcuts --remove   remove them
@@ -10,6 +14,20 @@ SCHEMA=org.gnome.settings-daemon.plugins.media-keys
 KEY_SCHEMA=$SCHEMA.custom-keybinding
 BASE=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
 LAUNCHER=$(command -v clipy-ubuntu || echo "$(dirname "$(readlink -f "$0")")/clipy-ubuntu")
+SETTINGS=${XDG_CONFIG_HOME:-$HOME/.config}/clipy/settings.json
+
+# shortcut KEY DEFAULT: the configured accelerator, or DEFAULT when unset.
+shortcut() {
+    /usr/bin/python3 - "$SETTINGS" "$1" "$2" <<'PY' 2>/dev/null || echo "$2"
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        value = json.load(f).get(sys.argv[2])
+except (OSError, ValueError):
+    value = None
+print(value if isinstance(value, str) and value else sys.argv[3])
+PY
+}
 
 if ! command -v gsettings >/dev/null 2>&1; then
     echo "gsettings not found: add the shortcuts in your desktop's keyboard settings instead." >&2
@@ -21,9 +39,9 @@ current=$(gsettings get $SCHEMA custom-keybindings)
 paths=$(echo "$current" | sed -e 's/^@as //' -e 's/[][]//g' | tr ',' '\n' | sed -e "s/[ ']//g" | grep -v '/clipy-' | grep -v '^$' || true)
 
 if [ "${1:-}" != "--remove" ]; then
-    for spec in "main|Clipy: main menu|<Primary><Alt>v" \
-                "history|Clipy: history menu|<Primary><Alt>h" \
-                "snippet|Clipy: snippet menu|<Primary><Alt>b"; do
+    for spec in "main|Clipy: main menu|$(shortcut main_shortcut '<Primary><Alt>v')" \
+                "history|Clipy: history menu|$(shortcut history_shortcut '<Primary><Alt>h')" \
+                "snippet|Clipy: snippet menu|$(shortcut snippet_shortcut '<Primary><Alt>b')"; do
         type=${spec%%|*}; rest=${spec#*|}; name=${rest%%|*}; binding=${rest#*|}
         path="$BASE/clipy-$type/"
         gsettings set "$KEY_SCHEMA:$path" name "$name"
@@ -31,6 +49,8 @@ if [ "${1:-}" != "--remove" ]; then
         gsettings set "$KEY_SCHEMA:$path" binding "$binding"
         paths="$paths
 $path"
+        added="${added:-}  $binding  $name
+"
     done
 fi
 
@@ -40,6 +60,6 @@ gsettings set $SCHEMA custom-keybindings "[$list]"
 if [ "${1:-}" = "--remove" ]; then
     echo "Removed Clipy shortcuts."
 else
-    echo "Added shortcuts: Ctrl+Alt+V (main), Ctrl+Alt+H (history), Ctrl+Alt+B (snippets)."
+    printf 'Added shortcuts:\n%s' "$added"
     echo "Change them in Settings > Keyboard > View and Customize Shortcuts > Custom Shortcuts."
 fi
