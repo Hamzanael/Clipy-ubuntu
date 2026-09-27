@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -218,6 +219,21 @@ class PasteTests(unittest.TestCase):
     def test_x11_refocuses_target_window(self):
         argv = paste.paste_command("ctrl+v", session="x11", which=lambda name: True, window=42)
         self.assertEqual(argv, ["xdotool", "windowfocus", "--sync", "42", "key", "--clearmodifiers", "ctrl+v"])
+
+    def test_window_classes_and_terminals(self):
+        def run(argv, **_kwargs):
+            self.assertEqual(argv, ["xprop", "-id", "42", "WM_CLASS"])
+            return subprocess.CompletedProcess(argv, 0, 'WM_CLASS(STRING) = "ghostty", "com.mitchellh.ghostty"\n')
+        classes = paste.window_classes(42, run=run)
+        self.assertEqual(classes, ["ghostty", "com.mitchellh.ghostty"])
+        self.assertTrue(paste.is_terminal(classes))
+        self.assertTrue(paste.is_terminal(["gnome-terminal-server", "Gnome-terminal"]))
+        self.assertFalse(paste.is_terminal(["google-chrome", "google-chrome"]))
+        self.assertEqual(paste.window_classes(None, run=run), [])
+
+        def missing(*_args, **_kwargs):
+            raise OSError
+        self.assertEqual(paste.window_classes(42, run=missing), [])
 
     def test_no_tool(self):
         self.assertIsNone(paste.paste_command("ctrl+v", session="x11", which=lambda name: False))

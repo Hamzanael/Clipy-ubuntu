@@ -50,7 +50,9 @@ class PreferencesWindow(Gtk.Window):
         self._switch(group, "paste_automatically", "Paste automatically",
                      "Send the paste keystroke after choosing an item")
         self._entry(group, "paste_keys", "Paste keystroke", "ctrl+v",
-                    "Terminals need ctrl+shift+v; shift+insert works almost everywhere")
+                    "shift+insert works almost everywhere")
+        self._entry(group, "terminal_paste_keys", "Paste keystroke in terminals", "shift+insert",
+                    "Used when a terminal has focus, for example ctrl+shift+v")
         if paste.paste_command(self.settings["paste_keys"]) is None:
             self._note(page, "Automatic paste needs xdotool (X11) or ydotool/wtype (Wayland). "
                              "Until one is installed, Clipy copies the item and you press Ctrl+V.")

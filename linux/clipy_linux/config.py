@@ -45,6 +45,10 @@ DEFAULTS = {
     # Keys sent to the focused window to paste. Terminals usually need
     # "ctrl+shift+v"; "shift+Insert" works almost everywhere on X11.
     "paste_keys": "ctrl+v",
+    # Linux only: keys used instead when the focused window is a terminal.
+    # shift+insert (with the text also on the primary selection) works in
+    # every terminal and doesn't collide with a global Ctrl+Shift+V shortcut.
+    "terminal_paste_keys": "shift+insert",
 }
 
 

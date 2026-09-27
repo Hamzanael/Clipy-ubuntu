@@ -317,14 +317,24 @@ class ClipyApplication(Gtk.Application):
     def paste_text(self, text):
         self.clipboard.set_text(text, -1)
         self.clipboard.store()
-        self._send_paste()
+        self._send_paste(text)
 
-    def _send_paste(self):
+    def _send_paste(self, text=None):
         if not self.settings["paste_automatically"]:
             return
         # Give the menu time to close and focus to return to the target window.
         target, self.paste_target = self.paste_target, None
-        GLib.timeout_add(PASTE_DELAY_MS, lambda: paste.send_paste(self.settings["paste_keys"], target) and False)
+        GLib.timeout_add(PASTE_DELAY_MS, lambda: self._paste_into(target, text) and False)
+
+    def _paste_into(self, target, text):
+        keys = self.settings["paste_keys"]
+        terminal_keys = self.settings["terminal_paste_keys"]
+        # Images keep the normal keys: terminals can't paste them anyway.
+        if text is not None and terminal_keys and paste.is_terminal(paste.window_classes(target or paste.focused_window())):
+            keys = terminal_keys
+            # Some terminals (xterm, Ghostty) paste the primary selection on Shift+Insert.
+            Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY).set_text(text, -1)
+        return paste.send_paste(keys, target)
 
     def clear_history(self):
         if self.settings["confirm_clear_history"]:

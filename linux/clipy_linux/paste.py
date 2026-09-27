@@ -73,6 +73,34 @@ def focused_window(which=shutil.which):
     return None
 
 
+# WM_CLASS names (lowercase) of terminals, which don't paste with Ctrl+V.
+TERMINAL_CLASSES = {
+    "alacritty", "com.mitchellh.ghostty", "contour", "deepin-terminal", "foot",
+    "ghostty", "gnome-terminal", "gnome-terminal-server", "guake", "kgx", "kitty",
+    "konsole", "lxterminal", "mate-terminal", "org.gnome.console", "org.gnome.ptyxis",
+    "org.wezfurlong.wezterm", "ptyxis", "qterminal", "rio", "st", "st-256color",
+    "terminator", "terminology", "tilda", "tilix", "urxvt", "uxterm", "wezterm",
+    "xfce4-terminal", "xterm",
+}
+
+
+def window_classes(window, run=subprocess.run):
+    """The lowercase WM_CLASS instance and class names of an X11 window."""
+    if not window:
+        return []
+    try:
+        result = run(["xprop", "-id", str(window), "WM_CLASS"], capture_output=True, text=True, timeout=1)
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    # WM_CLASS(STRING) = "ghostty", "com.mitchellh.ghostty"
+    _, _, value = result.stdout.partition("=")
+    return [name.strip().strip('"').lower() for name in value.split(",") if name.strip()]
+
+
+def is_terminal(classes):
+    return any(name in TERMINAL_CLASSES for name in classes)
+
+
 def send_paste(keys="ctrl+v", window=None):
     argv = paste_command(keys, window=window)
     if not argv:

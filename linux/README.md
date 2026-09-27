@@ -121,8 +121,12 @@ Automatic paste works by simulating a key press:
   `wtype`, so there you need `ydotool`. Otherwise Clipy copies the item and you
   press Ctrl+V yourself. `xdotool` still reaches apps that run under XWayland.
 
-Terminals paste with Ctrl+Shift+V. Change "Paste keystroke" in Preferences to
-`ctrl+shift+v`, or to `shift+insert`, which works in most apps.
+Terminals don't paste with Ctrl+V. On X11, Clipy recognises common terminals
+(GNOME Terminal, Ghostty, Kitty, Alacritty, Konsole, …) and sends "Paste keystroke
+in terminals" instead, `shift+insert` by default. It also puts the text on the
+primary selection, because some terminals, such as xterm and Ghostty, paste that
+on Shift+Insert. Unlike `ctrl+shift+v`, this doesn't clash when Ctrl+Shift+V is
+your Clipy shortcut. For other terminals, change "Paste keystroke" in Preferences.
 
 ## Where data is stored
 
